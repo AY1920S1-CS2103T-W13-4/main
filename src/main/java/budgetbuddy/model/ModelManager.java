@@ -43,7 +43,7 @@ public class ModelManager implements Model {
 
         this.loansManager = new LoansManager(loansManager.getLoans());
         this.ruleManager = new RuleManager(ruleManager);
-        this.accountsManager = new AccountsManager(accountsManager.getAccountsList());
+        this.accountsManager = new AccountsManager(accountsManager.getAccounts());
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());

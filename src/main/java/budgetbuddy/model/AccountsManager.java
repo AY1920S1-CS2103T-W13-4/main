@@ -5,11 +5,12 @@ import static java.util.Objects.requireNonNull;
 import java.util.List;
 import java.util.function.Predicate;
 
+import budgetbuddy.commons.core.index.Index;
 import budgetbuddy.model.account.Account;
 import budgetbuddy.model.account.UniqueAccountList;
 import budgetbuddy.model.account.exception.AccountNotFoundException;
-import budgetbuddy.model.attributes.Name;
 import budgetbuddy.model.transaction.Transaction;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
@@ -22,9 +23,13 @@ public class AccountsManager {
 
     private final FilteredList<Account> filteredAccounts;
 
+    private final ObservableList<Account> internalList = FXCollections.observableArrayList();
+    private final ObservableList<Account> internalUnmodifiableList =
+            FXCollections.unmodifiableObservableList(internalList);
+
     public AccountsManager() {
         this.accounts = new UniqueAccountList();
-        filteredAccounts = new FilteredList<>(this.getAccountsList(), s -> true);
+        filteredAccounts = new FilteredList<>(this.getAccounts(), s -> true);
     }
 
     /**
@@ -34,16 +39,8 @@ public class AccountsManager {
     public AccountsManager(List<Account> accounts) {
         requireNonNull(accounts);
         this.accounts = new UniqueAccountList(accounts);
-        filteredAccounts = new FilteredList<>(this.getAccountsList(), s -> true);
-    }
-
-
-    /**
-     * Retrieves the list of accounts.
-     */
-    // TODO Probably need to change this to work with the UI.
-    public ObservableList<Account> getAccountsList() {
-        return accounts.asUnmodifiableObservableList();
+        filteredAccounts = new FilteredList<>(this.getAccounts(), s -> true);
+        this.internalList.setAll(accounts);
     }
 
     /**
@@ -53,24 +50,29 @@ public class AccountsManager {
         return filteredAccounts;
     }
 
+    /**
+     * Retrieves the list of accounts.
+     */
+    public ObservableList<Account> getAccounts() {
+        return internalUnmodifiableList;
+    }
 
     /**
      * Adds a given account to its specified account in the list.
      * @param toAdd The account to add.
      */
     public void addAccount(Account toAdd) {
-        accounts.add(toAdd);
+        internalList.add(toAdd);
     }
 
     /**
-     * Edits an account's Name
+     * Replaces a target account with the given account.
+     * @param toEdit The index of the target account to replace.
+     * @param editedAccount The edited account to replace the target account with.
      */
-    public void editAccount(Account targetAccount, Name name) {
-        if (accounts.contains(targetAccount)) {
-            accounts.get(targetAccount).setName(targetAccount, name);
-        } else {
-            throw new AccountNotFoundException();
-        }
+    public void editAccount(Index toEdit, Account editedAccount) throws AccountNotFoundException {
+        checkIndexValidity(toEdit);
+        internalList.set(toEdit.getZeroBased(), editedAccount);
     }
 
     /**
@@ -78,9 +80,29 @@ public class AccountsManager {
      * @param toDelete The target account for deletion.
      */
     public void deleteAccount (Account toDelete) {
-        if (accounts.contains(toDelete)) {
-            accounts.remove(toDelete);
+        if (internalList.contains(toDelete)) {
+            internalList.remove(toDelete);
         } else {
+            throw new AccountNotFoundException();
+        }
+    }
+
+    /**
+     * Returns the current number of accounts in the list.
+     * @return The current number of accounts in the list as an {@code int}.
+     */
+    public int getAccountsCount() {
+        return getAccounts().size();
+    }
+
+
+    /**
+     * Checks if a given index exceeds the number of accounts currently in the list.
+     * @param toCheck The index to check.
+     * @throws AccountNotFoundException If the index exceeds the current number of accounts.
+     */
+    private void checkIndexValidity(Index toCheck) throws AccountNotFoundException {
+        if (toCheck.getOneBased() > getAccountsCount()) {
             throw new AccountNotFoundException();
         }
     }
@@ -107,7 +129,7 @@ public class AccountsManager {
     //TODO implement addTransaction
     public void addTransaction(Transaction toAdd) {
         Account accountToCheck = toAdd.getAccount();
-        if (accounts.contains(accountToCheck)) {
+        if (internalList.contains(accountToCheck)) {
 
         }
     }
@@ -128,6 +150,16 @@ public class AccountsManager {
         }
 
         AccountsManager otherAccountsManager = (AccountsManager) other;
-        return accounts.equals(otherAccountsManager.accounts);
+        return internalList.equals(otherAccountsManager.internalList);
+    }
+
+    /**
+     * Returns the account at the specified index in the list.
+     * @param toGet The index of the target account.
+     * @throws AccountNotFoundException If the account is not in the list.
+     */
+    public Account getAccount(Index toGet) throws AccountNotFoundException {
+        checkIndexValidity(toGet);
+        return getAccounts().get(toGet.getZeroBased());
     }
 }
