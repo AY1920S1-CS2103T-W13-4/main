@@ -11,13 +11,11 @@ import budgetbuddy.model.account.UniqueAccountList;
 import budgetbuddy.model.account.exception.AccountNotFoundException;
 import budgetbuddy.model.transaction.Transaction;
 import javafx.collections.FXCollections;
-import budgetbuddy.model.attributes.Name;
-import budgetbuddy.model.transaction.Transaction;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
 /**
- * Manages the loans of each person in a list of persons.
+ * Manages the account in a list of accounts.
  */
 public class AccountsManager {
 
