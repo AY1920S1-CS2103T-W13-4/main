@@ -31,7 +31,7 @@ public class AccountsManager {
 
     public AccountsManager() {
         this.accounts = new UniqueAccountList();
-        filteredAccounts = new FilteredList<>(this.getAccounts(), s -> true)
+        filteredAccounts = new FilteredList<>(this.getAccounts(), s -> true);
     }
 
     /**
