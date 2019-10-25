@@ -14,6 +14,7 @@ import budgetbuddy.model.account.Account;
 import budgetbuddy.model.attributes.Category;
 import budgetbuddy.model.attributes.Description;
 import budgetbuddy.model.attributes.Name;
+import budgetbuddy.model.rule.Rule;
 import budgetbuddy.model.rule.RuleAction;
 import budgetbuddy.model.rule.RulePredicate;
 import budgetbuddy.model.rule.expression.ActionExpression;
@@ -30,7 +31,6 @@ import budgetbuddy.model.transaction.TransactionList;
 public class CommandParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index is not a non-zero unsigned integer.";
-    public static final String TYPE_EXPRESSION = "EXPRESSION";
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
@@ -240,7 +240,7 @@ public class CommandParserUtil {
      */
     public static RulePredicate parsePredicate(String predicate, String type) throws ParseException {
         requireNonNull(predicate);
-        if (type.equals(TYPE_EXPRESSION)) {
+        if (type.equals(Rule.TYPE_EXPRESSION)) {
             return parsePredicateExpr(predicate);
         } else {
             throw new ParseException(RulePredicate.MESSAGE_CONSTRAINTS);
@@ -255,7 +255,7 @@ public class CommandParserUtil {
      */
     public static RuleAction parseAction(String action, String type) throws ParseException {
         requireNonNull(action);
-        if (type.equals(TYPE_EXPRESSION)) {
+        if (type.equals(Rule.TYPE_EXPRESSION)) {
             return parseActionExpr(action);
         } else {
             throw new ParseException(RuleAction.MESSAGE_CONSTRAINTS);

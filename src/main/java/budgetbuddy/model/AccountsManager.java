@@ -11,6 +11,8 @@ import budgetbuddy.model.account.UniqueAccountList;
 import budgetbuddy.model.account.exception.AccountNotFoundException;
 import budgetbuddy.model.transaction.Transaction;
 import javafx.collections.FXCollections;
+import budgetbuddy.model.attributes.Name;
+import budgetbuddy.model.transaction.Transaction;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
@@ -29,7 +31,7 @@ public class AccountsManager {
 
     public AccountsManager() {
         this.accounts = new UniqueAccountList();
-        filteredAccounts = new FilteredList<>(this.getAccounts(), s -> true);
+        filteredAccounts = new FilteredList<>(this.getAccounts(), s -> true)
     }
 
     /**
@@ -44,18 +46,19 @@ public class AccountsManager {
     }
 
     /**
+     * Retrieves the list of accounts.
+     */
+    public ObservableList<Account> getAccounts() {
+        return internalUnmodifiableList;
+    }
+
+    /**
      * Returns an unmodifiable view of the list of Account
      */
     public ObservableList<Account> getFilteredAccountList() {
         return filteredAccounts;
     }
 
-    /**
-     * Retrieves the list of accounts.
-     */
-    public ObservableList<Account> getAccounts() {
-        return internalUnmodifiableList;
-    }
 
     /**
      * Adds a given account to its specified account in the list.

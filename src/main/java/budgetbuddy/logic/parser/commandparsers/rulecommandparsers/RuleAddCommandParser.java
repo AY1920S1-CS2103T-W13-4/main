@@ -42,9 +42,9 @@ public class RuleAddCommandParser implements CommandParser<RuleAddCommand> {
         }
 
         RulePredicate predicate = CommandParserUtil.parsePredicate(argMultimap.getValue(PREFIX_PREDICATE).get(),
-                CommandParserUtil.TYPE_EXPRESSION);
+                Rule.TYPE_EXPRESSION);
         RuleAction action = CommandParserUtil.parseAction(argMultimap.getValue(PREFIX_ACTION).get(),
-                CommandParserUtil.TYPE_EXPRESSION);
+                Rule.TYPE_EXPRESSION);
 
         Rule rule = new Rule(predicate, action);
 

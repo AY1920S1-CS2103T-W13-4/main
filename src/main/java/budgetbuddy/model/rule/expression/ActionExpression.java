@@ -5,6 +5,7 @@ import static budgetbuddy.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import budgetbuddy.model.rule.Rule;
 import budgetbuddy.model.rule.RuleAction;
 
 /**
@@ -46,6 +47,11 @@ public class ActionExpression extends RuleAction {
 
     public Value getValue() {
         return value;
+    }
+
+    @Override
+    public String getType() {
+        return Rule.TYPE_EXPRESSION;
     }
 
     /**
