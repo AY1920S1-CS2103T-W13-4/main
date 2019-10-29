@@ -125,7 +125,7 @@ Note: you cannot delete an account if there are transactions associated with the
 
 Format: `account delete <id>`
 
-=== Find account: `account find`
+==== Find account: `account find`
 
 Finds the accounts with the specified keywords, as in `account list`.
 
