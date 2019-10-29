@@ -1,8 +1,8 @@
 package budgetbuddy.model.loan;
 
+import static budgetbuddy.commons.util.AppUtil.getDateFormat;
 import static budgetbuddy.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 
@@ -17,12 +17,12 @@ import budgetbuddy.model.transaction.Amount;
  */
 public class Loan {
 
-    private final Person person;
     private final Direction direction;
     private final Amount amount;
     private final Date date;
     private final Description description;
 
+    private Person person;
     private Status status;
 
     /**
@@ -43,6 +43,10 @@ public class Loan {
         return person;
     }
 
+    public void setPerson(Person person) {
+        this.person = person;
+    }
+
     public Direction getDirection() {
         return direction;
     }
@@ -56,8 +60,7 @@ public class Loan {
     }
 
     public String getDateString() {
-        // TODO Should standardize the date display format throughout the app.
-        return new SimpleDateFormat("dd/MM/yyyy").format(date);
+        return getDateFormat().format(date);
     }
 
     public Description getDescription() {
@@ -78,6 +81,15 @@ public class Loan {
      */
     public boolean isPaid() {
         return status == Status.PAID;
+    }
+
+    /**
+     * Returns a {@code string} containing the amount, direction and person of the loan.
+     */
+    public String getEssentialInfo() {
+        return getDirection() == Direction.OUT
+                ? String.format("%s owes you %s", getPerson(), getAmount())
+                : String.format("You owe %s %s", getPerson(), getAmount());
     }
 
     /**
@@ -109,15 +121,16 @@ public class Loan {
     @Override
     public String toString() {
         String directionWithFunctionWord = getDirection() == Direction.OUT
-                ? getDirection().direction.toLowerCase() + " to "
-                : getDirection().direction.toLowerCase() + " from ";
+                ? getDirection().direction.toLowerCase() + " to"
+                : getDirection().direction.toLowerCase() + " from";
 
         final String divider = " | ";
         final StringBuilder builder = new StringBuilder();
         builder.append(getStatus().getStatusIcon()).append(" ")
                 .append(getAmount()).append(" ")
-                .append(directionWithFunctionWord)
-                .append(getPerson().getName()).append(divider)
+                .append(directionWithFunctionWord).append(" ")
+                .append(getPerson())
+                .append(divider)
                 .append(getDateString());
         if (!description.getDescription().isBlank()) {
             builder.append(divider).append(getDescription());

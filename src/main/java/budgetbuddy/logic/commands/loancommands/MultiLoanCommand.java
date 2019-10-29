@@ -21,7 +21,7 @@ import budgetbuddy.model.person.Person;
 public abstract class MultiLoanCommand extends Command {
 
     protected static final String MULTI_LOAN_SYNTAX = "<loan number... > [p/<person> ...]";
-    protected static final String MULTI_LOAN_SYNTAX_EXAMPLE = "1 3 4 p/Peter Mary";
+    protected static final String MULTI_LOAN_SYNTAX_EXAMPLE = "1 3 4 p/Peter p/Mary";
 
     private static final String MESSAGE_NO_TARGETS =
             "No loan indices or persons given as targets.";
@@ -30,11 +30,11 @@ public abstract class MultiLoanCommand extends Command {
     private static final String MESSAGE_NO_TARGETS_HIT =
             "None of the targeted loans could be found.";
 
+    protected List<Index> hitLoanIndices;
+    protected List<Index> missingLoanIndices;
+
     private List<Index> loanIndices;
     private List<Person> persons;
-
-    private List<Index> hitLoanIndices;
-    private List<Index> missingLoanIndices;
 
     /**
      * Constructs a command capable of targeting multiple loans to act upon.
@@ -98,12 +98,9 @@ public abstract class MultiLoanCommand extends Command {
      * @param operation A `Consumer` that takes an index, gets the loan with that index, and acts on the loan.
      */
     protected void actOnTargetLoans(List<Index> targetLoanIndices, Consumer<Index> operation) {
-        int indicesProcessed = 0;
-        targetLoanIndices.sort(new Index.SortDescending()); // indices MUST be sorted before iteration
         for (Index index : targetLoanIndices) {
             try {
-                operation.accept(Index.fromZeroBased(index.getZeroBased() - indicesProcessed));
-                indicesProcessed++;
+                operation.accept(index);
                 hitLoanIndices.add(index);
             } catch (LoanNotFoundException e) {
                 missingLoanIndices.add(index);
@@ -118,6 +115,12 @@ public abstract class MultiLoanCommand extends Command {
      */
     protected String constructMultiLoanResult(String successMessage) {
 
+        successMessage = String.format(
+                successMessage,
+                hitLoanIndices.stream()
+                        .map(index -> String.format("%d", index.getOneBased()))
+                        .collect(Collectors.joining(", ")));
+
         if (missingLoanIndices.isEmpty()) {
             return successMessage;
         }
@@ -127,12 +130,15 @@ public abstract class MultiLoanCommand extends Command {
         }
 
         StringBuilder resultMessage = new StringBuilder();
-        resultMessage.append(successMessage).append("\n").append("However, the following loans were not found:\n");
-        for (Index missingIndex : missingLoanIndices) {
-            resultMessage.append(missingIndex.toString()).append(", ");
-        }
-        resultMessage.delete(resultMessage.length() - 2, resultMessage.length() - 1); // remove ", " at end
+        resultMessage.append(successMessage).append("\n").append("However, the following loans were not found: ");
 
+        for (Index missingIndex : missingLoanIndices) {
+            resultMessage
+                    .append(String.format("%d", missingIndex.getOneBased()))
+                    .append(", ");
+        }
+
+        resultMessage.delete(resultMessage.length() - 2, resultMessage.length() - 1); // remove ", " at end
         return resultMessage.toString();
     }
 

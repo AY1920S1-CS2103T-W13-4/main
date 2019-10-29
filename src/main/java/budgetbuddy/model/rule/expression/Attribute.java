@@ -1,7 +1,6 @@
 package budgetbuddy.model.rule.expression;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import budgetbuddy.logic.rules.RuleProcessingUtil;
 
@@ -10,12 +9,18 @@ import budgetbuddy.logic.rules.RuleProcessingUtil;
  * Guarantees: immutable; is valid as declared in {@link #isValidAttribute(String)}
  */
 public enum Attribute {
-    DESCRIPTION("description", RuleProcessingUtil.TYPE_DESC),
-    AMOUNT("amount", RuleProcessingUtil.TYPE_AMOUNT),
+    DESCRIPTION("desc", RuleProcessingUtil.TYPE_STRING),
+    OUT_AMOUNT("outamt", RuleProcessingUtil.TYPE_NUMBER),
+    IN_AMOUNT("inamt", RuleProcessingUtil.TYPE_NUMBER),
     DATE("date", RuleProcessingUtil.TYPE_DATE);
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Attributes should be alphabetical and should not be blank";
+            "Attributes should be valid and not be blank\n"
+            + "Valid attributes: "
+                    + Arrays.stream(Attribute.values())
+                    .map(op -> op.representation)
+                    .reduce((x, y) -> x + ", " + y)
+                    .orElse("");
 
     private final String representation;
     private final String evaluatedType;
@@ -35,13 +40,14 @@ public enum Attribute {
     }
 
     /**
-     * Returns an {@code Optional<Attribute>} given a valid representation.
+     * Returns an {@code Attribute} given a valid string representation.
      */
-    public static Optional<Attribute> of(String rep) {
+    public static Attribute of(String rep) {
         return Arrays
                 .stream(Attribute.values())
                 .filter(attribute -> attribute.representation.equals(rep.toLowerCase()))
-                .findFirst();
+                .findFirst()
+                .get();
     }
 
     /**

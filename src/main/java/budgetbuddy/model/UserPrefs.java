@@ -14,9 +14,10 @@ import budgetbuddy.commons.core.GuiSettings;
 public class UserPrefs implements ReadOnlyUserPrefs {
 
     private GuiSettings guiSettings = new GuiSettings();
-    private Path addressBookFilePath = Paths.get("data" , "addressbook.json");
     private Path loansFilePath = Paths.get("data", "loans.json");
     private Path accountsFilePath = Paths.get("data", "accounts.json");
+    private Path ruleFilePath = Paths.get("data", "rules.json");
+    private Path scriptsPath = Paths.get("data", "scripts");
 
     /**
      * Creates a {@code UserPrefs} with default values.
@@ -37,9 +38,10 @@ public class UserPrefs implements ReadOnlyUserPrefs {
     public void resetData(ReadOnlyUserPrefs newUserPrefs) {
         requireNonNull(newUserPrefs);
         setGuiSettings(newUserPrefs.getGuiSettings());
-        setAddressBookFilePath(newUserPrefs.getAddressBookFilePath());
         setLoansFilePath(newUserPrefs.getLoansFilePath());
         setAccountsFilePath(newUserPrefs.getAccountsFilePath());
+        setRuleFilePath(newUserPrefs.getRuleFilePath());
+        setScriptsPath(newUserPrefs.getScriptsPath());
     }
 
     public GuiSettings getGuiSettings() {
@@ -49,15 +51,6 @@ public class UserPrefs implements ReadOnlyUserPrefs {
     public void setGuiSettings(GuiSettings guiSettings) {
         requireNonNull(guiSettings);
         this.guiSettings = guiSettings;
-    }
-
-    public Path getAddressBookFilePath() {
-        return addressBookFilePath;
-    }
-
-    public void setAddressBookFilePath(Path addressBookFilePath) {
-        requireNonNull(addressBookFilePath);
-        this.addressBookFilePath = addressBookFilePath;
     }
 
     public Path getLoansFilePath() {
@@ -76,6 +69,24 @@ public class UserPrefs implements ReadOnlyUserPrefs {
     public void setAccountsFilePath(Path accountsFilePath) {
         requireNonNull(accountsFilePath);
         this.accountsFilePath = accountsFilePath;
+
+      public Path getRuleFilePath() {
+        return ruleFilePath;
+    }
+
+    public void setRuleFilePath(Path ruleFilePath) {
+        requireNonNull(ruleFilePath);
+        this.ruleFilePath = ruleFilePath;
+    }
+
+    @Override
+    public Path getScriptsPath() {
+        return scriptsPath;
+    }
+
+    public void setScriptsPath(Path scriptsPath) {
+        requireNonNull(scriptsPath);
+        this.scriptsPath = scriptsPath;
     }
 
     @Override
@@ -90,23 +101,25 @@ public class UserPrefs implements ReadOnlyUserPrefs {
         UserPrefs o = (UserPrefs) other;
 
         return guiSettings.equals(o.guiSettings)
-                && addressBookFilePath.equals(o.addressBookFilePath)
-                && loansFilePath.equals(o.loansFilePath)
                 && accountsFilePath.equals(o.accountsFilePath);
+                && loansFilePath.equals(o.loansFilePath)
+                && ruleFilePath.equals(o.ruleFilePath)
+                && scriptsPath.equals(o.scriptsPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(guiSettings, addressBookFilePath, loansFilePath, accountsFilePath);
+        return Objects.hash(guiSettings, loansFilePath, accountsFilePath, ruleFilePath, scriptsPath);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Gui Settings : " + guiSettings);
-        sb.append("\nLocal data file location : " + addressBookFilePath);
         sb.append("\nLoans data file location : " + loansFilePath);
         sb.append("\nAccounts data file location : " + accountsFilePath);
+        sb.append("\nRule data file location : " + ruleFilePath);
+        sb.append("\nScripts location : " + scriptsPath);
         return sb.toString();
     }
 

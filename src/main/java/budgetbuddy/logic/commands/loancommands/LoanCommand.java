@@ -8,6 +8,7 @@ import static budgetbuddy.logic.parser.CliSyntax.PREFIX_PERSON;
 import static java.util.Objects.requireNonNull;
 
 import budgetbuddy.logic.commands.Command;
+import budgetbuddy.logic.commands.CommandCategory;
 import budgetbuddy.logic.commands.CommandResult;
 import budgetbuddy.logic.commands.exceptions.CommandException;
 import budgetbuddy.model.Model;
@@ -34,7 +35,7 @@ public class LoanCommand extends Command {
             + PREFIX_DESCRIPTION + "Weed money. "
             + PREFIX_DATE + "4/12/2020";
 
-    public static final String MESSAGE_SUCCESS = "New loan added: %1$s";
+    public static final String MESSAGE_SUCCESS = "New loan added:\n%1$s";
 
     private final Loan toAdd;
 
@@ -48,7 +49,7 @@ public class LoanCommand extends Command {
         requireAllNonNull(model, model.getLoansManager());
 
         model.getLoansManager().addLoan(toAdd);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd), null);
+        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd), CommandCategory.LOAN);
     }
 
     @Override

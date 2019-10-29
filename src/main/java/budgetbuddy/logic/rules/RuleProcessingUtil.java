@@ -1,8 +1,32 @@
 package budgetbuddy.logic.rules;
 
+import static java.util.Objects.requireNonNull;
+
+import java.util.HashMap;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import budgetbuddy.logic.rules.performable.Performable;
+import budgetbuddy.logic.rules.performable.PerformableExpression;
+import budgetbuddy.logic.rules.performable.SetCategoryExpression;
+import budgetbuddy.logic.rules.performable.SetDescExpression;
+import budgetbuddy.logic.rules.testable.ContainsExpression;
+import budgetbuddy.logic.rules.testable.EqualToExpression;
+import budgetbuddy.logic.rules.testable.LessEqualExpression;
+import budgetbuddy.logic.rules.testable.LessThanExpression;
+import budgetbuddy.logic.rules.testable.MoreEqualExpression;
+import budgetbuddy.logic.rules.testable.MoreThanExpression;
+import budgetbuddy.logic.rules.testable.Testable;
+import budgetbuddy.logic.rules.testable.TestableExpression;
+import budgetbuddy.model.Model;
 import budgetbuddy.model.attributes.Direction;
+import budgetbuddy.model.rule.Rule;
+import budgetbuddy.model.rule.RuleAction;
+import budgetbuddy.model.rule.RulePredicate;
+import budgetbuddy.model.rule.expression.ActionExpression;
 import budgetbuddy.model.rule.expression.Attribute;
 import budgetbuddy.model.rule.expression.Operator;
+import budgetbuddy.model.rule.expression.PredicateExpression;
 import budgetbuddy.model.rule.expression.Value;
 import budgetbuddy.model.transaction.Transaction;
 
@@ -10,10 +34,26 @@ import budgetbuddy.model.transaction.Transaction;
  * Contains utility methods and constants used for processing rules.
  */
 public class RuleProcessingUtil {
-    public static final String TYPE_DESC = "DESCRIPTION";
-    public static final String TYPE_AMOUNT = "AMOUNT";
+    public static final String TYPE_STRING = "STRING";
+    public static final String TYPE_NUMBER = "NUMBER";
     public static final String TYPE_DATE = "DATE";
-    public static final String TYPE_CATEGORY = "CATEGORY";
+    private static final HashMap<Operator, BiFunction<Attribute, Value, TestableExpression>> testableMap;
+    private static final HashMap<Operator, Function<Value, PerformableExpression>> performableMap;
+
+    static {
+        testableMap = new HashMap<>();
+        performableMap = new HashMap<>();
+
+        testableMap.put(Operator.CONTAINS, ContainsExpression::new);
+        testableMap.put(Operator.EQUAL_TO, EqualToExpression::new);
+        testableMap.put(Operator.LESS_EQUAL, LessEqualExpression::new);
+        testableMap.put(Operator.LESS_THAN, LessThanExpression::new);
+        testableMap.put(Operator.MORE_EQUAL, MoreEqualExpression::new);
+        testableMap.put(Operator.MORE_THAN, MoreThanExpression::new);
+
+        performableMap.put(Operator.SET_CATEGORY, SetCategoryExpression::new);
+        performableMap.put(Operator.SET_DESC, SetDescExpression::new);
+    }
 
     /**
      * Is a private constructor for a static-only class.
@@ -27,9 +67,12 @@ public class RuleProcessingUtil {
         switch (attribute) {
         case DESCRIPTION:
             return txn.getDescription();
-        case AMOUNT:
-            long sign = txn.getDirection().equals(Direction.IN) ? 1 : -1;
-            return sign * txn.getAmount().toLong();
+        case IN_AMOUNT:
+            return (txn.getDirection().equals(Direction.IN) ? 1 : -1)
+                    * (txn.getAmount().toLong() / 100.0);
+        case OUT_AMOUNT:
+            return (txn.getDirection().equals(Direction.OUT) ? 1 : -1)
+                    * (txn.getAmount().toLong() / 100.0);
         case DATE:
             return txn.getDate();
         default:
@@ -40,17 +83,57 @@ public class RuleProcessingUtil {
     }
 
     /**
+     * Parses a {@code RulePredicate predicate} into a {@code Testable}.
+     */
+    public static Testable parseTestable(RulePredicate predicate) {
+        requireNonNull(predicate);
+        if (predicate.getType().equals(Rule.TYPE_EXPRESSION)) {
+            PredicateExpression predExpr = (PredicateExpression) predicate;
+            return testableMap.get(predExpr.getOperator()).apply(predExpr.getAttribute(), predExpr.getValue());
+        } else {
+            // todo: script retrieval
+            return null;
+        }
+    }
+
+    /**
+     * Parses a {@code RuleAction action} into a {@code Performable}
+     */
+    public static Performable parsePerformable(RuleAction action) {
+        requireNonNull(action);
+        if (action.getType().equals(Rule.TYPE_EXPRESSION)) {
+            ActionExpression actExpr = (ActionExpression) action;
+            return performableMap.get(actExpr.getOperator()).apply(actExpr.getValue());
+        } else {
+            // todo: script retrieval
+            return null;
+        }
+    }
+
+    /**
+     * Runs all rules against transaction
+     */
+    public static void executeRules(Model model, Transaction txn) {
+        for (Rule rule : model.getRuleManager().getRules()) {
+            Testable testable = parseTestable(rule.getPredicate());
+            if (testable.test(txn)) {
+                Performable performable = parsePerformable(rule.getAction());
+                performable.perform(model, txn);
+            }
+        }
+    }
+
+    /**
      * Returns if a value can be parsed into the specified type.
      */
     public static boolean isValueParsable(String typeName, Value value) {
         switch (typeName) {
-        case TYPE_DESC:
-        case TYPE_CATEGORY:
+        case TYPE_STRING:
             // don't have to handle since value already stored as string
             break;
-        case TYPE_AMOUNT:
+        case TYPE_NUMBER:
             try {
-                Long.parseLong(value.toString());
+                Double.parseDouble(value.toString());
                 break;
             } catch (NumberFormatException e) {
                 return false;
@@ -63,22 +146,5 @@ public class RuleProcessingUtil {
         }
 
         return true;
-    }
-
-    /**
-     * Returns if the predicate expression is valid,
-     * i.e. attribute and value are all working with the expected type specified by the operator.
-     */
-    public static boolean isValidPredicateExpr(Attribute attribute, Operator operator, Value value) {
-        return operator.getExpectedType().equals(attribute.getEvaluatedType())
-                && isValueParsable(operator.getExpectedType(), value);
-    }
-
-    /**
-     * Returns if the action expression is valid,
-     * i.e. value is working with the expected type specified by the operator.
-     */
-    public static boolean isValidActionExpr(Operator operator, Value value) {
-        return isValueParsable(operator.getExpectedType(), value);
     }
 }

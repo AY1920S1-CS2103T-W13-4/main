@@ -1,19 +1,23 @@
 package budgetbuddy.model;
 
+import static budgetbuddy.model.loan.LoanFilters.FILTER_ALL;
+import static budgetbuddy.model.loan.LoanSorters.DATE_NEWEST;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 import budgetbuddy.commons.core.index.Index;
+import budgetbuddy.model.loan.Debtor;
 import budgetbuddy.model.loan.Loan;
 import budgetbuddy.model.loan.Status;
 import budgetbuddy.model.loan.exceptions.LoanNotFoundException;
-import budgetbuddy.model.person.Person;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 
 /**
  * Maintains a list of loans.
@@ -24,6 +28,16 @@ public class LoansManager {
     private final ObservableList<Loan> internalUnmodifiableList =
             FXCollections.unmodifiableObservableList(internalList);
 
+    /**
+     * A list to store the results of the {@code loan split} command.
+     */
+    private final ObservableList<Debtor> debtors = FXCollections.observableArrayList();
+    private final ObservableList<Debtor> unmodifiableDebtors =
+            FXCollections.unmodifiableObservableList(debtors);
+    private final FilteredList<Loan> filteredLoans = new FilteredList<Loan>(internalUnmodifiableList);
+
+    private Comparator<Loan> sorter;
+
     public LoansManager() {}
 
     /**
@@ -33,6 +47,27 @@ public class LoansManager {
     public LoansManager(List<Loan> loans) {
         requireNonNull(loans);
         this.internalList.setAll(loans);
+        this.sorter = DATE_NEWEST;
+    }
+
+    /**
+     * Updates the predicate of {@code filteredLoans} with the given predicate.
+     * @param predicate
+     */
+    public void updateFilteredList(Predicate<Loan> predicate) {
+        requireNonNull(predicate);
+        filteredLoans.setPredicate(predicate);
+    }
+
+    //========================================= Loan Methods ===========================================
+
+    /**
+     * Sorts the {@code internalList} using the given {@code sorter}.
+     * Also sets the loan manager to use the given {@code sorter} for sorting.
+     */
+    public void sortLoans(Comparator<Loan> sorter) {
+        this.sorter = this.sorter.equals(sorter) ? sorter.reversed() : sorter;
+        internalList.sort(this.sorter);
     }
 
     /**
@@ -43,20 +78,10 @@ public class LoansManager {
     }
 
     /**
-     * Returns the list of loans sorted by each loan's person's name.
+     * Returns the filtered list of loans.
      */
-    public ObservableList<Loan> getSortedLoans() {
-        return internalList.sorted(new SortByPerson());
-    }
-
-    /**
-     * Returns a filtered list of loans belonging to the given person.
-     * @param person The person to filter the list by.
-     */
-    public List<Loan> getFilteredLoans(Person person) {
-        return getLoans().stream()
-                .filter(loan -> loan.getPerson().isSamePerson(person))
-                .collect(Collectors.toList());
+    public ObservableList<Loan> getFilteredLoans() {
+        return filteredLoans;
     }
 
     /**
@@ -90,7 +115,9 @@ public class LoansManager {
      * @param toAdd The loan to add.
      */
     public void addLoan(Loan toAdd) {
-        internalList.add(toAdd);
+        internalList.add(0, toAdd);
+        internalList.sort(sorter);
+        updateFilteredList(FILTER_ALL);
     }
 
     /**
@@ -133,6 +160,31 @@ public class LoansManager {
         }
     }
 
+    /**
+     * Returns a {@code Comparator} that sorts loans by their person's name in alphabetical order.
+     */
+    public Comparator<Loan> personAlphabeticalSorter() {
+        return Comparator.comparing(loan -> loan.getPerson().getName().toString());
+    }
+
+    //========================================= Split/Debtor Methods ===================================
+
+    /**
+     * Sets the elements of the list of debtors to the given list of debtors.
+     */
+    public void setDebtors(List<Debtor> debtors) {
+        requireNonNull(debtors);
+        this.debtors.setAll(debtors);
+    }
+
+    /**
+     * Returns an unmodifiable {@code SortedList} of debtors.
+     * The list is sorted by the debtors' names in alphabetical order.
+     */
+    public SortedList<Debtor> getDebtors() {
+        return unmodifiableDebtors.sorted(Comparator.comparing(debtor -> debtor.getDebtor().getName().toString()));
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -145,16 +197,5 @@ public class LoansManager {
 
         LoansManager otherLoansManager = (LoansManager) other;
         return getLoans().equals(otherLoansManager.getLoans());
-    }
-
-    /**
-     * A comparator to sort loans by each of their person's names in alphabetical order.
-     */
-    public static class SortByPerson implements Comparator<Loan> {
-        @Override
-        public int compare(Loan first, Loan second) {
-            return first.getPerson().getName().toString().compareTo(
-                    second.getPerson().getName().toString());
-        }
     }
 }

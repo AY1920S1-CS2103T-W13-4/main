@@ -3,16 +3,12 @@ package budgetbuddy.model;
 import static budgetbuddy.commons.util.CollectionUtil.requireAllNonNull;
 import static java.util.Objects.requireNonNull;
 
-import java.nio.file.Path;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 import budgetbuddy.commons.core.GuiSettings;
 import budgetbuddy.commons.core.LogsCenter;
-import budgetbuddy.model.person.Person;
 import budgetbuddy.model.transaction.Transaction;
-
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
 /**
@@ -25,34 +21,32 @@ public class ModelManager implements Model {
     private final AccountsManager accountsManager;
     private final RuleManager ruleManager;
 
-    private final AddressBook addressBook;
     private final UserPrefs userPrefs;
-    private final FilteredList<Person> filteredPersons;
     private final FilteredList<Transaction> filteredTransactions;
+    private final ScriptLibrary scriptLibrary;
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs.
      */
 
     public ModelManager(LoansManager loansManager, RuleManager ruleManager, AccountsManager accountsManager,
-                        ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
+                        ScriptLibrary scriptLibrary, ReadOnlyUserPrefs userPrefs) {
         super();
-        requireAllNonNull(loansManager, ruleManager, accountsManager, addressBook, userPrefs);
+        requireAllNonNull(loansManager, ruleManager, accountsManager, userPrefs, scriptLibrary);
 
-        logger.fine("Initializing with address book: " + addressBook + " and user prefs " + userPrefs);
+        logger.fine("Initializing with accounts manager: " + accountsManager + " and user prefs " + userPrefs);
 
         this.loansManager = new LoansManager(loansManager.getLoans());
-        this.ruleManager = new RuleManager(ruleManager);
         this.accountsManager = new AccountsManager(accountsManager.getAccounts());
         this.addressBook = new AddressBook(addressBook);
+        this.ruleManager = new RuleManager(ruleManager.getRules());
         this.userPrefs = new UserPrefs(userPrefs);
-        filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
+        this.scriptLibrary = scriptLibrary;
         filteredTransactions = new FilteredList<>(this.accountsManager.getTransactionList());
     }
 
     public ModelManager() {
-        this(new LoansManager(), new RuleManager(), new AccountsManager(), new AddressBook(),
-                new UserPrefs());
+        this(new LoansManager(), new RuleManager(), new AccountsManager(), new ScriptLibraryManager(), new UserPrefs());
     }
 
     //=========== Loan Manager ===============================================================================
@@ -90,6 +84,13 @@ public class ModelManager implements Model {
         return accountsManager;
     }
 
+    //=========== ScriptLibrary ==============================================================================
+
+    @Override
+    public ScriptLibrary getScriptLibrary() {
+        return scriptLibrary;
+    }
+
     //=========== UserPrefs ==================================================================================
 
     @Override
@@ -115,70 +116,6 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public Path getAddressBookFilePath() {
-        return userPrefs.getAddressBookFilePath();
-    }
-
-    @Override
-    public void setAddressBookFilePath(Path addressBookFilePath) {
-        requireNonNull(addressBookFilePath);
-        userPrefs.setAddressBookFilePath(addressBookFilePath);
-    }
-
-    //=========== AddressBook ================================================================================
-
-    @Override
-    public void setAddressBook(ReadOnlyAddressBook addressBook) {
-        this.addressBook.resetData(addressBook);
-    }
-
-    @Override
-    public ReadOnlyAddressBook getAddressBook() {
-        return addressBook;
-    }
-
-    @Override
-    public boolean hasPerson(Person person) {
-        requireNonNull(person);
-        return addressBook.hasPerson(person);
-    }
-
-    @Override
-    public void deletePerson(Person target) {
-        addressBook.removePerson(target);
-    }
-
-    @Override
-    public void addPerson(Person person) {
-        addressBook.addPerson(person);
-        updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
-    }
-
-    @Override
-    public void setPerson(Person target, Person editedPerson) {
-        requireAllNonNull(target, editedPerson);
-
-        addressBook.setPerson(target, editedPerson);
-    }
-
-    //=========== Filtered Person List Accessors =============================================================
-
-    /**
-     * Returns an unmodifiable view of the list of {@code Person} backed by the internal list of
-     * {@code versionedAddressBook}
-     */
-    @Override
-    public ObservableList<Person> getFilteredPersonList() {
-        return filteredPersons;
-    }
-
-    @Override
-    public void updateFilteredPersonList(Predicate<Person> predicate) {
-        requireNonNull(predicate);
-        filteredPersons.setPredicate(predicate);
-    }
-
-    @Override
     public boolean equals(Object obj) {
         // short circuit if same object
         if (obj == this) {
@@ -195,9 +132,9 @@ public class ModelManager implements Model {
         return ruleManager.equals(other.ruleManager)
                 && accountsManager.equals(other.accountsManager)
                 && loansManager.equals(other.loansManager)
-                && addressBook.equals(other.addressBook)
+                && scriptLibrary.equals(other.scriptLibrary)
                 && userPrefs.equals(other.userPrefs)
-                && filteredPersons.equals(other.filteredPersons);
+                && filteredTransactions.equals(other.filteredTransactions);
     }
 
 }

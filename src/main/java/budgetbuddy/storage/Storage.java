@@ -7,16 +7,22 @@ import java.util.Optional;
 import budgetbuddy.commons.exceptions.DataConversionException;
 import budgetbuddy.model.AccountsManager;
 import budgetbuddy.model.LoansManager;
-import budgetbuddy.model.ReadOnlyAddressBook;
+import budgetbuddy.model.Model;
 import budgetbuddy.model.ReadOnlyUserPrefs;
+import budgetbuddy.model.RuleManager;
 import budgetbuddy.model.UserPrefs;
 import budgetbuddy.storage.accounts.AccountsStorage;
 import budgetbuddy.storage.loans.LoansStorage;
+import budgetbuddy.storage.rules.RuleStorage;
+import budgetbuddy.storage.scripts.ScriptsStorage;
 
 /**
  * API of the Storage component
  */
-public interface Storage extends AddressBookStorage, LoansStorage, AccountsStorage, UserPrefsStorage {
+public interface Storage extends LoansStorage, AccountsStorage, RuleStorage, ScriptsStorage, UserPrefsStorage {
+
+
+    void save(Model model) throws IOException;
 
     @Override
     Optional<UserPrefs> readUserPrefs() throws DataConversionException, IOException;
@@ -25,19 +31,15 @@ public interface Storage extends AddressBookStorage, LoansStorage, AccountsStora
     void saveUserPrefs(ReadOnlyUserPrefs userPrefs) throws IOException;
 
     @Override
-    Path getAddressBookFilePath();
-
-    @Override
     Path getLoansFilePath();
 
     @Override
     Path getAccountsFilePath();
 
-    @Override
-    Optional<ReadOnlyAddressBook> readAddressBook() throws DataConversionException, IOException;
+    void saveLoans(LoansManager loansManager) throws IOException;
 
     @Override
-    void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException;
+    Path getRuleFilePath();
 
     @Override
     void saveLoans(LoansManager loansManager) throws IOException;
@@ -45,4 +47,5 @@ public interface Storage extends AddressBookStorage, LoansStorage, AccountsStora
     @Override
     void saveAccounts(AccountsManager accountsManager) throws IOException;
 
+    void saveRules(RuleManager ruleManager) throws IOException;
 }

@@ -1,15 +1,14 @@
 package budgetbuddy.logic.parser;
 
+import static budgetbuddy.commons.util.AppUtil.getDateFormat;
 import static java.util.Objects.requireNonNull;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
 
 import budgetbuddy.commons.core.index.Index;
 import budgetbuddy.commons.util.StringUtil;
 import budgetbuddy.logic.parser.exceptions.ParseException;
-import budgetbuddy.logic.rules.RuleProcessingUtil;
 import budgetbuddy.model.account.Account;
 import budgetbuddy.model.attributes.Category;
 import budgetbuddy.model.attributes.Description;
@@ -22,6 +21,7 @@ import budgetbuddy.model.rule.expression.Attribute;
 import budgetbuddy.model.rule.expression.Operator;
 import budgetbuddy.model.rule.expression.PredicateExpression;
 import budgetbuddy.model.rule.expression.Value;
+import budgetbuddy.model.script.ScriptName;
 import budgetbuddy.model.transaction.Amount;
 import budgetbuddy.model.transaction.TransactionList;
 
@@ -134,8 +134,7 @@ public class CommandParserUtil {
         requireNonNull(date);
         String trimmedDate = date.trim();
         try {
-            // TODO Some problems, e.g. 12/13/2020 gets parsed to 12/01/2021
-            return new SimpleDateFormat("dd/MM/yy").parse(trimmedDate);
+            return getDateFormat().parse(trimmedDate);
         } catch (java.text.ParseException e) {
             throw new ParseException(e.getMessage());
         }
@@ -153,7 +152,7 @@ public class CommandParserUtil {
         if (!Attribute.isValidAttribute(trimmedAttr)) {
             throw new ParseException(Attribute.MESSAGE_CONSTRAINTS);
         }
-        return Attribute.of(trimmedAttr).get();
+        return Attribute.of(trimmedAttr);
     }
 
     /**
@@ -168,7 +167,7 @@ public class CommandParserUtil {
         if (!Operator.isValidOperator(trimmedOp)) {
             throw new ParseException(Operator.MESSAGE_CONSTRAINTS);
         }
-        return Operator.of(trimmedOp).get();
+        return Operator.of(trimmedOp);
     }
 
     /**
@@ -205,7 +204,7 @@ public class CommandParserUtil {
         Operator operator = parseOperator(matcher.group("exprOperator"));
         Value value = parseValue(matcher.group("exprValue"));
 
-        if (!RuleProcessingUtil.isValidPredicateExpr(attribute, operator, value)) {
+        if (!PredicateExpression.isValidPredicateExpr(attribute, operator, value)) {
             throw new ParseException(PredicateExpression.MESSAGE_TYPE_REQUIREMENTS);
         }
         return new PredicateExpression(attribute, operator, value);
@@ -229,7 +228,7 @@ public class CommandParserUtil {
         Operator operator = parseOperator(matcher.group("exprOperator"));
         Value value = parseValue(matcher.group("exprValue"));
 
-        if (!RuleProcessingUtil.isValidActionExpr(operator, value)) {
+        if (!ActionExpression.isValidActionExpr(operator, value)) {
             throw new ParseException(ActionExpression.MESSAGE_TYPE_REQUIREMENTS);
         }
         return new ActionExpression(operator, value);
@@ -259,6 +258,25 @@ public class CommandParserUtil {
             return parseActionExpr(action);
         } else {
             throw new ParseException(RuleAction.MESSAGE_CONSTRAINTS);
+        }
+    }
+
+    /**
+     * Parses a {@code String name} into a {@link ScriptName}.
+     *
+     * Leading and trailing whitespace is trimmed.
+     *
+     * @param name the string to parse
+     * @return the parsed script name
+     * @throws ParseException if the given string is not a valid script name
+     */
+    public static ScriptName parseScriptName(String name) throws ParseException {
+        requireNonNull(name);
+        String trimmed = name.trim();
+        try {
+            return new ScriptName(trimmed);
+        } catch (IllegalArgumentException e) {
+            throw new ParseException(e.getMessage());
         }
     }
 

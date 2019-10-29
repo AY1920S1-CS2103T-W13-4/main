@@ -1,7 +1,6 @@
 package budgetbuddy.logic;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.logging.Logger;
 
 import budgetbuddy.commons.core.GuiSettings;
@@ -11,13 +10,15 @@ import budgetbuddy.logic.commands.CommandResult;
 import budgetbuddy.logic.commands.exceptions.CommandException;
 import budgetbuddy.logic.parser.CommandLineParser;
 import budgetbuddy.logic.parser.exceptions.ParseException;
-import budgetbuddy.logic.script.ScriptManager;
+import budgetbuddy.logic.script.ScriptEngine;
 import budgetbuddy.model.Model;
-import budgetbuddy.model.ReadOnlyAddressBook;
-import budgetbuddy.model.person.Person;
+import budgetbuddy.model.loan.Debtor;
+import budgetbuddy.model.loan.Loan;
 import budgetbuddy.model.rule.Rule;
 import budgetbuddy.storage.Storage;
+
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 
 /**
  * The main LogicManager of the app.
@@ -29,13 +30,13 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final CommandLineParser addressBookParser;
-    private final ScriptManager scriptManager;
+    private final ScriptEngine scriptEngine;
 
     public LogicManager(Model model, Storage storage) {
         this.model = model;
         this.storage = storage;
         addressBookParser = new CommandLineParser();
-        scriptManager = new ScriptManager(engine -> {
+        scriptEngine = new ScriptEngine(engine -> {
             // TODO: This will be pulled out into a separate class in a future PR
             // TODO: Currently, this just brings it to feature-parity
             engine.setVariable("ab", model);
@@ -48,12 +49,10 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
-        commandResult = command.execute(model, scriptManager);
+        commandResult = command.execute(model, scriptEngine);
 
         try {
-            storage.saveAddressBook(model.getAddressBook());
-            storage.saveLoans(model.getLoansManager());
-            storage.saveAccounts(model.getAccountsManager());
+            storage.save(model);
         } catch (IOException ioe) {
             throw new CommandException(FILE_OPS_ERROR_MESSAGE + ioe, ioe);
         }
@@ -62,23 +61,18 @@ public class LogicManager implements Logic {
     }
 
     @Override
-    public ReadOnlyAddressBook getAddressBook() {
-        return model.getAddressBook();
+    public ObservableList<Loan> getFilteredLoanList() {
+        return model.getLoansManager().getFilteredLoans();
     }
 
     @Override
-    public ObservableList<Person> getFilteredPersonList() {
-        return model.getFilteredPersonList();
+    public SortedList<Debtor> getSortedDebtorList() {
+        return model.getLoansManager().getDebtors();
     }
 
     @Override
     public ObservableList<Rule> getRuleList() {
-        return model.getRuleManager().getRuleList();
-    }
-
-    @Override
-    public Path getAddressBookFilePath() {
-        return model.getAddressBookFilePath();
+        return model.getRuleManager().getRules();
     }
 
     @Override

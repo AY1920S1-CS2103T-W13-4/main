@@ -1,7 +1,5 @@
 package budgetbuddy.commons.core.index;
 
-import java.util.Comparator;
-
 /**
  * Represents a zero-based or one-based index.
  *
@@ -57,15 +55,5 @@ public class Index {
     @Override
     public String toString() {
         return zeroBasedIndex + "";
-    }
-
-    /**
-     * A comparator to sort indices in descending order.
-     */
-    public static class SortDescending implements Comparator<Index> {
-        @Override
-        public int compare(Index first, Index second) {
-            return first.getZeroBased() - second.getZeroBased();
-        }
     }
 }

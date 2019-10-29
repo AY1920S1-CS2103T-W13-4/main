@@ -1,16 +1,15 @@
 package budgetbuddy.logic;
 
-import java.nio.file.Path;
-
 import budgetbuddy.commons.core.GuiSettings;
 import budgetbuddy.logic.commands.CommandResult;
 import budgetbuddy.logic.commands.exceptions.CommandException;
 import budgetbuddy.logic.parser.exceptions.ParseException;
-import budgetbuddy.model.Model;
-import budgetbuddy.model.ReadOnlyAddressBook;
-import budgetbuddy.model.person.Person;
+import budgetbuddy.model.loan.Debtor;
+import budgetbuddy.model.loan.Loan;
 import budgetbuddy.model.rule.Rule;
+
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 
 /**
  * API of the Logic component
@@ -26,22 +25,17 @@ public interface Logic {
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
     /**
-     * Returns the AddressBook.
-     *
-     * @see Model#getAddressBook()
+     * Returns an unmodifiable view of the list of loans.
      */
-    ReadOnlyAddressBook getAddressBook();
+    ObservableList<Loan> getFilteredLoanList();
 
-    /** Returns an unmodifiable view of the filtered list of persons */
-    ObservableList<Person> getFilteredPersonList();
+    /**
+     * Returns an unmodifiable view of the list of debtors.
+     */
+    SortedList<Debtor> getSortedDebtorList();
 
     /** Returns an unmodifiable view of the list of rules */
     ObservableList<Rule> getRuleList();
-
-    /**
-     * Returns the user prefs' address book file path.
-     */
-    Path getAddressBookFilePath();
 
     /**
      * Returns the user prefs' GUI settings.
