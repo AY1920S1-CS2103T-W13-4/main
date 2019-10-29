@@ -16,6 +16,7 @@ public class UserPrefs implements ReadOnlyUserPrefs {
     private GuiSettings guiSettings = new GuiSettings();
     private Path addressBookFilePath = Paths.get("data" , "addressbook.json");
     private Path loansFilePath = Paths.get("data", "loans.json");
+    private Path accountsFilePath = Paths.get("data", "accounts.json");
 
     /**
      * Creates a {@code UserPrefs} with default values.
@@ -38,6 +39,7 @@ public class UserPrefs implements ReadOnlyUserPrefs {
         setGuiSettings(newUserPrefs.getGuiSettings());
         setAddressBookFilePath(newUserPrefs.getAddressBookFilePath());
         setLoansFilePath(newUserPrefs.getLoansFilePath());
+        setAccountsFilePath(newUserPrefs.getAccountsFilePath());
     }
 
     public GuiSettings getGuiSettings() {
@@ -62,9 +64,18 @@ public class UserPrefs implements ReadOnlyUserPrefs {
         return loansFilePath;
     }
 
+    public Path getAccountsFilePath() {
+        return accountsFilePath;
+    }
+
     public void setLoansFilePath(Path loansFilePath) {
         requireNonNull(loansFilePath);
         this.loansFilePath = loansFilePath;
+    }
+
+    public void setAccountsFilePath(Path accountsFilePath) {
+        requireNonNull(accountsFilePath);
+        this.accountsFilePath = accountsFilePath;
     }
 
     @Override
@@ -80,12 +91,13 @@ public class UserPrefs implements ReadOnlyUserPrefs {
 
         return guiSettings.equals(o.guiSettings)
                 && addressBookFilePath.equals(o.addressBookFilePath)
-                && loansFilePath.equals(o.loansFilePath);
+                && loansFilePath.equals(o.loansFilePath)
+                && accountsFilePath.equals(o.accountsFilePath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(guiSettings, addressBookFilePath, loansFilePath);
+        return Objects.hash(guiSettings, addressBookFilePath, loansFilePath, accountsFilePath);
     }
 
     @Override
@@ -94,6 +106,7 @@ public class UserPrefs implements ReadOnlyUserPrefs {
         sb.append("Gui Settings : " + guiSettings);
         sb.append("\nLocal data file location : " + addressBookFilePath);
         sb.append("\nLoans data file location : " + loansFilePath);
+        sb.append("\nAccounts data file location : " + accountsFilePath);
         return sb.toString();
     }
 

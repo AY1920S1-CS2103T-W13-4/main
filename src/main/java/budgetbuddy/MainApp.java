@@ -29,6 +29,8 @@ import budgetbuddy.storage.JsonUserPrefsStorage;
 import budgetbuddy.storage.Storage;
 import budgetbuddy.storage.StorageManager;
 import budgetbuddy.storage.UserPrefsStorage;
+import budgetbuddy.storage.accounts.AccountsStorage;
+import budgetbuddy.storage.accounts.JsonAccountsStorage;
 import budgetbuddy.storage.loans.JsonLoansStorage;
 import budgetbuddy.storage.loans.LoansStorage;
 import budgetbuddy.ui.Ui;
@@ -63,8 +65,9 @@ public class MainApp extends Application {
         UserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(config.getUserPrefsFilePath());
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
         AddressBookStorage addressBookStorage = new JsonAddressBookStorage(userPrefs.getAddressBookFilePath());
+        AccountsStorage accountsStorage = new JsonAccountsStorage(userPrefs.getAccountsFilePath());
         LoansStorage loansStorage = new JsonLoansStorage(userPrefs.getLoansFilePath());
-        storage = new StorageManager(addressBookStorage, loansStorage, userPrefsStorage);
+        storage = new StorageManager(addressBookStorage, loansStorage, accountsStorage, userPrefsStorage);
 
         initLogging(config);
 
@@ -81,7 +84,7 @@ public class MainApp extends Application {
      * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
      */
     private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
-        AccountsManager accountsManager = new AccountsManager();
+        AccountsManager accountsManager = initAccountsManager(storage);
         LoansManager loansManager = initLoansManager(storage);
         ReadOnlyAddressBook initialData = initAddressBook(storage);
         RuleManager ruleManager = new RuleManager();
@@ -130,6 +133,28 @@ public class MainApp extends Application {
         } catch (IOException e) {
             logger.warning("Problem while reading from loans file. Will be starting with an empty LoansManager.");
             return new LoansManager();
+        }
+    }
+
+    /**
+     * Loads and returns an Accounts Manager from storage.
+     * Returns an empty Accounts Manager if no file found or if exception occurs during loading.
+     */
+    private AccountsManager initAccountsManager(Storage storage) {
+        Optional<AccountsManager> accountsManagerOptional;
+
+        try {
+            accountsManagerOptional = storage.readAccounts();
+            if (accountsManagerOptional.isEmpty()) {
+                logger.info("Accounts file not found. Will be starting with an empty AccountsManager.");
+            }
+            return accountsManagerOptional.orElseGet(AccountsManager::new);
+        } catch (DataConversionException e) {
+            logger.warning("Accounts file not in the correct format. Will be starting with an empty AccountsManager.");
+            return new AccountsManager();
+        } catch (IOException e) {
+            logger.warning("Problem while reading from accounts file. Will be starting with an empty AccountsManager.");
+            return new AccountsManager();
         }
     }
 
