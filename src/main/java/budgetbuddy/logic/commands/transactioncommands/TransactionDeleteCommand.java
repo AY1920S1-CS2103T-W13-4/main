@@ -7,6 +7,7 @@ import java.util.List;
 import budgetbuddy.commons.core.Messages;
 import budgetbuddy.commons.core.index.Index;
 import budgetbuddy.logic.commands.Command;
+import budgetbuddy.logic.commands.CommandCategory;
 import budgetbuddy.logic.commands.CommandResult;
 import budgetbuddy.logic.commands.exceptions.CommandException;
 import budgetbuddy.model.Model;
@@ -45,7 +46,9 @@ public class TransactionDeleteCommand extends Command {
         }
 
         Transaction transactionToDelete = lastShownList.get(targetIndex.getZeroBased());
-        model.getAccountsManager().removeTransaction(transactionToDelete);
-        return new CommandResult(String.format(MESSAGE_DELETE_TRANSACTION_SUCCESS, transactionToDelete), null);
+        // TODO SLAP
+        model.getAccountsManager().getActiveAccount().deleteTransaction(transactionToDelete);
+        return new CommandResult(String.format(MESSAGE_DELETE_TRANSACTION_SUCCESS, transactionToDelete),
+                CommandCategory.TRANSACTION);
     }
 }

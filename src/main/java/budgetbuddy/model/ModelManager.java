@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import budgetbuddy.commons.core.GuiSettings;
 import budgetbuddy.commons.core.LogsCenter;
 import budgetbuddy.model.transaction.Transaction;
+import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 
 /**
@@ -28,7 +29,6 @@ public class ModelManager implements Model {
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs.
      */
-
     public ModelManager(LoansManager loansManager, RuleManager ruleManager, AccountsManager accountsManager,
                         ScriptLibrary scriptLibrary, ReadOnlyUserPrefs userPrefs) {
         super();
@@ -38,11 +38,10 @@ public class ModelManager implements Model {
 
         this.loansManager = new LoansManager(loansManager.getLoans());
         this.ruleManager = new RuleManager(ruleManager.getRules());
-        this.accountsManager = new AccountsManager(accountsManager.getAccounts());
+        this.accountsManager = accountsManager;
         this.userPrefs = new UserPrefs(userPrefs);
         this.scriptLibrary = scriptLibrary;
-        filteredTransactions = new FilteredList<>(
-                this.accountsManager.getDefaultAccount().getTransactionList().asUnmodifiableObservableList());
+        filteredTransactions = new FilteredList<>(FXCollections.emptyObservableList());
     }
 
     public ModelManager() {
@@ -67,11 +66,6 @@ public class ModelManager implements Model {
     @Override
     public FilteredList<Transaction> getFilteredTransactions() {
         return filteredTransactions;
-    }
-
-    @Override
-    public void deleteTransaction(Transaction target) {
-        accountsManager.removeTransaction(target);
     }
 
     @Override

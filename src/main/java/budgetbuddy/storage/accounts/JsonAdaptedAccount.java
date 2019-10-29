@@ -27,7 +27,7 @@ public class JsonAdaptedAccount {
      */
     public JsonAdaptedAccount(@JsonProperty("name") String name,
                            @JsonProperty("description") String description,
-                           @JsonProperty("transaction") String transactionList) {
+                           @JsonProperty("transactionList") String transactionList) {
         requireAllNonNull(name, description, transactionList);
         this.name = name;
         this.description = description;
@@ -41,6 +41,7 @@ public class JsonAdaptedAccount {
     public JsonAdaptedAccount(Account source) {
         name = source.getName().toString();
         description = source.getDescription().toString();
+        // TODO !!!
         transactionList = source.getTransactionList().toString();
     }
 
@@ -94,6 +95,7 @@ public class JsonAdaptedAccount {
         if (!Description.isValidDescription(transactionList)) {
             throw new IllegalValueException(TransactionList.MESSAGE_CONSTRAINTS);
         }
+        // TODO Deserialise transactions...
         return new TransactionList();
     }
 }
