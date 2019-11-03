@@ -29,13 +29,10 @@ public class AccountEditCommandParser implements CommandParser<AccountEditComman
         ArgumentMultimap argMultiMap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_DESCRIPTION);
 
-        Index accountIndex;
-        try {
-            accountIndex = CommandParserUtil.parseIndex(argMultiMap.getPreamble());
-        } catch (ParseException e) {
-            throw new ParseException(
-                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, AccountEditCommand.MESSAGE_USAGE), e);
+        if (argMultiMap.getPreamble().isEmpty()) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AccountEditCommand.MESSAGE_USAGE));
         }
+        Index accountIndex = CommandParserUtil.parseIndex(argMultiMap.getPreamble());
 
         AccountEditDescriptor accountEditDescriptor = new AccountEditDescriptor();
         if (argMultiMap.getValue(PREFIX_NAME).isPresent()) {

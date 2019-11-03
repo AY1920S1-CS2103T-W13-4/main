@@ -1,5 +1,6 @@
 package budgetbuddy.logic.commands.rulecommands;
 
+import static budgetbuddy.commons.core.Messages.MESSAGE_NO_SUCH_SCRIPT;
 import static budgetbuddy.commons.util.CollectionUtil.requireAllNonNull;
 import static budgetbuddy.logic.parser.CliSyntax.PREFIX_ACTION;
 import static budgetbuddy.logic.parser.CliSyntax.PREFIX_PREDICATE;
@@ -14,10 +15,14 @@ import budgetbuddy.logic.commands.CommandResult;
 import budgetbuddy.logic.commands.exceptions.CommandException;
 import budgetbuddy.model.Model;
 import budgetbuddy.model.RuleManager;
+import budgetbuddy.model.ScriptLibrary;
 import budgetbuddy.model.rule.Rule;
 import budgetbuddy.model.rule.RuleAction;
 import budgetbuddy.model.rule.RulePredicate;
 import budgetbuddy.model.rule.exceptions.RuleNotFoundException;
+import budgetbuddy.model.rule.script.ActionScript;
+import budgetbuddy.model.rule.script.PredicateScript;
+import budgetbuddy.model.script.ScriptName;
 
 /**
  * Edits a rule.
@@ -33,7 +38,7 @@ public class RuleEditCommand extends Command {
             + "[" + PREFIX_ACTION + "ACTION]\n"
             + "Example: " + COMMAND_WORD + " "
             + "1 "
-            + PREFIX_PREDICATE + "description contains daily";
+            + PREFIX_PREDICATE + "desc contains daily";
 
     public static final String MESSAGE_SUCCESS = "Rule #%1$d edited.";
     public static final String MESSAGE_UNEDITED = "At least one field must be provided for editing.";
@@ -50,13 +55,30 @@ public class RuleEditCommand extends Command {
 
     @Override
     public CommandResult execute(Model model) throws CommandException {
-        requireAllNonNull(model, model.getRuleManager());
+        requireAllNonNull(model, model.getRuleManager(), model.getScriptLibrary());
         RuleManager ruleManager = model.getRuleManager();
+        ScriptLibrary scriptLibrary = model.getScriptLibrary();
 
-        Rule editedRule;
+        Rule targetRule = ruleManager.getRule(targetIndex);
+        Rule editedRule = createEditedRule(targetRule, ruleEditDescriptor);
+
+        RulePredicate editedPred = editedRule.getPredicate();
+        if (editedPred.getType().equals(Rule.TYPE_SCRIPT)) {
+            ScriptName scriptName = ((PredicateScript) editedPred).getScriptName();
+            if (scriptLibrary.getScript(scriptName) == null) {
+                throw new CommandException(String.format(MESSAGE_NO_SUCH_SCRIPT, scriptName));
+            }
+        }
+
+        RuleAction editedAct = editedRule.getAction();
+        if (editedAct.getType().equals(Rule.TYPE_SCRIPT)) {
+            ScriptName scriptName = ((ActionScript) editedAct).getScriptName();
+            if (scriptLibrary.getScript(scriptName) == null) {
+                throw new CommandException(String.format(MESSAGE_NO_SUCH_SCRIPT, scriptName));
+            }
+        }
+
         try {
-            Rule targetRule = ruleManager.getRule(targetIndex);
-            editedRule = createEditedRule(targetRule, ruleEditDescriptor);
             ruleManager.editRule(targetIndex, editedRule);
         } catch (RuleNotFoundException e) {
             throw new CommandException(MESSAGE_FAILURE);

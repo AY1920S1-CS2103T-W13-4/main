@@ -11,11 +11,12 @@ import budgetbuddy.logic.commands.CommandResult;
 import budgetbuddy.logic.commands.exceptions.CommandException;
 import budgetbuddy.logic.parser.exceptions.ParseException;
 import budgetbuddy.ui.tab.AccountTab;
-import budgetbuddy.ui.tab.LoanSplitTab;
 import budgetbuddy.ui.tab.LoanTab;
 import budgetbuddy.ui.tab.PanelTab;
 import budgetbuddy.ui.tab.RuleTab;
 import budgetbuddy.ui.tab.ScriptTab;
+import budgetbuddy.ui.tab.TransactionTab;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
@@ -125,19 +126,19 @@ public class MainWindow extends UiPart<Stage> {
         AccountTab accountTab = new AccountTab(logic.getAccountList());
         tabMap.put(CommandCategory.ACCOUNT, accountTab);
 
+        TransactionTab transactionTab = new TransactionTab(logic.getTransactionList());
+        tabMap.put(CommandCategory.TRANSACTION, transactionTab);
+
         RuleTab ruleTab = new RuleTab(logic.getRuleList());
         tabMap.put(CommandCategory.RULE, ruleTab);
 
-        LoanTab loanTab = new LoanTab(logic.getFilteredLoanList());
+        LoanTab loanTab = new LoanTab(logic.getFilteredLoanList(), logic.getSortedDebtorList());
         tabMap.put(CommandCategory.LOAN, loanTab);
-
-        LoanSplitTab loanSplitTab = new LoanSplitTab(logic.getSortedDebtorList());
-        tabMap.put(CommandCategory.LOAN_SPLIT, loanSplitTab);
 
         ScriptTab scriptTab = new ScriptTab(logic.getScriptList());
         tabMap.put(CommandCategory.SCRIPT, scriptTab);
 
-        OutputDisplay outputDisplay = new OutputDisplay(accountTab, ruleTab, loanTab, loanSplitTab, scriptTab);
+        OutputDisplay outputDisplay = new OutputDisplay(accountTab, transactionTab, ruleTab, loanTab, scriptTab);
         outputDisplayPlaceholder.getChildren().add(outputDisplay.getRoot());
 
         resultDisplay = new ResultDisplay();
@@ -156,11 +157,19 @@ public class MainWindow extends UiPart<Stage> {
     /**
      * Updates the current tab on display
      */
-    private void updateView(PanelTab tabToView) {
-        if (tabToView != null) {
-            TabPane pane = (TabPane) outputDisplayPlaceholder.getChildren().get(0);
-            pane.getSelectionModel().select(tabToView);
+    private void updateView(PanelTab tabToView, CommandCategory category) {
+        if (tabToView == null) {
+            return;
         }
+
+        if (category.isSecondaryCategory()) {
+            tabToView.setSecondaryPanel();
+        } else {
+            tabToView.setPrimaryPanel();
+        }
+
+        TabPane pane = (TabPane) outputDisplayPlaceholder.getChildren().get(0);
+        pane.getSelectionModel().select(tabToView);
     }
 
     /**
@@ -215,7 +224,10 @@ public class MainWindow extends UiPart<Stage> {
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
 
             CommandCategory category = commandResult.getCommandCategory();
-            updateView(tabMap.get(category));
+            PanelTab tabToView = category.isSecondaryCategory()
+                    ? tabMap.get(category.getPrimaryCategory(category))
+                    : tabMap.get(category);
+            updateView(tabToView, category);
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
