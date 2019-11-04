@@ -1,7 +1,6 @@
 package budgetbuddy.logic.commands.loancommands;
 
 import static budgetbuddy.commons.util.CollectionUtil.generateCombinations;
-import static budgetbuddy.commons.util.CollectionUtil.hasDuplicates;
 import static budgetbuddy.commons.util.CollectionUtil.requireAllNonNull;
 import static budgetbuddy.logic.parser.CliSyntax.PREFIX_AMOUNT;
 import static budgetbuddy.logic.parser.CliSyntax.PREFIX_DATE;
@@ -62,7 +61,6 @@ public class LoanSplitCommand extends Command {
 
     public static final String MESSAGE_PERSON_AMOUNT_NUMBERS_MISMATCH =
             "The number of persons does not match the number of payments.";
-    public static final String MESSAGE_DUPLICATE_PERSONS = "Names of persons entered must be unique.";
 
     public static final String MESSAGE_INVALID_TOTAL = "Total amount must be more than zero.";
     public static final String MESSAGE_ALREADY_SPLIT_EQUALLY = "The amounts have already been split equally.";
@@ -96,8 +94,6 @@ public class LoanSplitCommand extends Command {
 
         if (persons.size() != amounts.size()) {
             throw new CommandException(MESSAGE_PERSON_AMOUNT_NUMBERS_MISMATCH);
-        } else if (hasDuplicates(persons)) {
-            throw new CommandException(MESSAGE_DUPLICATE_PERSONS);
         }
 
         Person user = new Person(new Name("You"));
