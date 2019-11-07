@@ -30,10 +30,10 @@ public class AccountListPanel extends DisplayPanel {
      * Custom {@code ListCell} that displays the graphics of a {@code Account} using a {@code AccountCard}.
      */
     class AccountListViewCell extends ListCell<Account> {
+
         @Override
         protected void updateItem(Account account, boolean empty) {
             super.updateItem(account, empty);
-
             if (empty || account == null) {
                 setGraphic(null);
                 setText(null);
@@ -44,6 +44,8 @@ public class AccountListPanel extends DisplayPanel {
                 setGraphic(accountCard.getRoot());
                 if (account.isActive()) {
                     accountCard.getRoot().setStyle("-fx-background-color: #005F83");
+                } else {
+                    accountCard.getRoot().setStyle("-fx-background-color: null");
                 }
             }
 

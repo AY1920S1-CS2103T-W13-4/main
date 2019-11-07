@@ -2,10 +2,7 @@ package budgetbuddy.logic.rules;
 
 import static budgetbuddy.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -60,6 +57,9 @@ public class RuleEngine {
     public static final String TYPE_AMOUNT = "AMOUNT";
     public static final String TYPE_DATE = "DATE";
     public static final String TYPE_BLANK = "BLANK";
+
+    public static final String MESSAGE_INVALID_VALUE = "Invalid value provided.";
+
     private static final HashMap<Operator, BiFunction<Attribute, Value, TestableExpression>> testableMap;
     private static final HashMap<Operator, Function<Value, PerformableExpression>> performableMap;
 
@@ -94,9 +94,8 @@ public class RuleEngine {
      */
     public static void executeRules(Model model, ScriptEngine scriptEngine, Index txnIndex, Account account) {
         requireAllNonNull(model, model.getRuleManager(), model.getScriptLibrary(), scriptEngine, txnIndex, account);
-        List<Rule> ruleList = new ArrayList<>(model.getRuleManager().getRules());
-        Collections.reverse(ruleList);
-        for (Rule rule : ruleList) {
+
+        for (Rule rule : model.getRuleManager().getRules()) {
             Testable testable = generateTestable(rule.getPredicate(), model.getScriptLibrary(), scriptEngine);
             if (testable.test(txnIndex, account)) {
                 Performable performable = generatePerformable(rule.getAction(), model.getScriptLibrary(), scriptEngine);
@@ -162,8 +161,14 @@ public class RuleEngine {
         requireAllNonNull(typeName, value);
         switch (typeName) {
         case TYPE_CATEGORY:
+            if (value.toString().isBlank()) {
+                throw new ParseException(MESSAGE_INVALID_VALUE);
+            }
             return CommandParserUtil.parseCategory(value.toString());
         case TYPE_DESC:
+            if (value.toString().isBlank()) {
+                throw new ParseException(MESSAGE_INVALID_VALUE);
+            }
             return CommandParserUtil.parseDescription(value.toString());
         case TYPE_AMOUNT:
             return CommandParserUtil.parseAmount(value.toString());
