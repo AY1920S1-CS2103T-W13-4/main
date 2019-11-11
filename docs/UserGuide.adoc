@@ -126,33 +126,83 @@ which can be useful should you ever forget how to execute a certain command.
 
 Format: `help`
 
+// tag::transactions[]
 === Managing transactions: `txn`
+
+image::txnUG1.png[]
+
+Transactions form the core of BudgetBuddy. They can be used to track any purchases you make,
+or any money that you receive. Transactions can further be filtered by various criteria,
+if you want to find out how much money you've spent in a certain time period, on in
+a certain category of spending.
 
 ==== Add a transaction: `txn out|in`
 
 Adds a new transaction of the specified amount and with the given description.
 
-Format: `txn dn/out|in x/<amount> d/<description> [a/<account>] [c/<category>] [w/<date>] [r/<d|w|m|y>]`
+Format: `txn dn/out|in x/<amount> d/<description> [a/<account>] [c/<category>] [w/<date>]`
+
+Examples:
+
+* txn dn/out x/3 d/apples a/food c/fruits w/5/4/2019
+
+* txn dn/in x/50 d/pocket money a/school
+
 ****
-* If the account is not given, the transaction is inserted into the active account.
+* The account provided has to be exist before transactions can be added to it.
+* If the account is not given, the transaction is added to the active account.
 * If the category is not given, the transaction is not categorized.
 * If the date is not given, the date is set to the current date.
-* If the argument ‘r’ is added, the transition is marked as recurring;
-identical entries will be added either daily, weekly, monthly, or yearly.
 ****
 
 ==== Edit a transaction: `txn edit`
 
-Edits the specified transaction, setting the specified fields.
-If the ‘recurring’ field is modified, the app will ask if all previous recurring entries should be deleted.
+Edits the specified transaction, setting the specified fields. At least one field should be provided.
 
-Format: `txn edit <id> dn/out|in [x/<amount>] [d/<description>] [a/<account>] [c/<category>] [w/<date>] [r/<d|w|m|y>]`
+Format: `txn edit <id> dn/out|in [x/<amount>] [d/<description>] [a/<account>] [c/<category>] [w/<date>]`
+
+Examples:
+
+* txn edit 1 x/50 d/apple juice c/groceries
+
+* txn edit 4 a/personal
+
+****
+* The new edited transaction should have at least 1 field different from the previous transaction.
+* If a new account is provided, that account will be the new active account.
+****
 
 ==== Delete transaction(s): `txn delete`
 
-Deletes the transaction with the specified ID.
+Deletes the transaction with the specified ID on the current list of filtered transactions.
 
 Format: `txn delete <id>`
+
+Examples:
+
+* txn delete 3
+
+==== List transactions(s): 'txn list'
+
+Lists the transactions from the current active account, with optional filters and sorting methods.
+
+Format: `txn list [c/category] [f/from date] [u/until date] [af/from amount] [au/until amount] [d/description]
+[s/<aw|dw|ax|dx|ad|dd>]`
+
+Examples:
+
+* txn list c/food u/10/4/2019 af/5 au/10 d/fruits s/ad
+****
+The explanation of the sorting abbreviations are as follows:
+
+* aw: Sort transactions by ascending date.
+* dw: Sort transactions by descending date.
+* ax: Sort transactions by ascending amount.
+* dx: Sort transactions by descending amount.
+* ad: Sort transactions by description, ascending alphabetically.
+* dd: Sort transactions by description, descending alphabetically.
+****
+// tag::transactions[]
 
 // tag::accounts[]
 === Managing accounts: `account`
@@ -169,6 +219,14 @@ Examples:
 You have created an account with name of 'Japan trip'.
 * `account add n/Japan trip d/expense spent in Japan`
 You have created an account with name of 'Japan trip' and description of 'expense spent in Japan'.
+
+image::accountadd_1.png[]
+
+1a. Enter the command "account add n/exchange d/expenses spent during SEP".
+
+image::accountadd_2.png[]
+
+1b. You have created an account to record an account named "exchange" with the successful message displayed.
 
 ==== List accounts: `account list`
 
@@ -240,12 +298,16 @@ Format: `account find <keyword>`
 
 Examples:
 
-* `account find trip`
+*`account find trip`
 You can see a list of accounts with the word 'trip' contained in their names.
+
+image::accountfind_1.png[]
+
+1a. Enter the command "account find trip".
 
 image::accountfind_2.png[]
 
-You have found 2 accounts with their names containing the keyword "trip".
+1b. You have found 2 accounts with their names containing the keyword "trip".
 
 ==== View report of an account: `account report`
 
@@ -260,11 +322,7 @@ Format: `account report <id>`
 
 Example:
 
-* `account report 2` You can view the report of the first account.
-
-image::accountreport2.png[]
-
-You can view the details of the second account.
+*`account report 1` You can view the report of the first account.
 
 image::accountreport_1.png[]
 
@@ -287,7 +345,7 @@ Step 1. Type `account overview` in the command textfield input.
 image::accountOverview_2.png[]
 Step 2. Successful message displayed, and you can navigate to the exports folder in the same directory of the source file.
 
-image::AccountOverview_3.png[]
+image::accountOverview3.png[]
 
 image::accountOverview4.png[]
 Step 3. Open the html file in the exports folder to see the overview of all accounts.
